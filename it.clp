@@ -128,6 +128,7 @@
 )
 
 ;this is a really simple way that doesn't require parsing question objects -> use pattern matching
+;this is also a reference to IT crowd:
 (defrule QUESTIONS::off-and-on-again
     ?prob <- (problem
         (off-and-on-again no)
@@ -137,6 +138,21 @@
         (off-and-on-again (get-answer "HAVE YOU TRIED TURNING IT OFF AND ON AGAIN?" (create$ yes no)))
     )
 )
+
+
+(defrule QUESTIONS::is-crashing
+    ?prob <- (problem
+        (off-and-on-again yes)
+        (wont-turn-on no)
+        (screen-blank no)
+        (is-crashing unknown)
+    )
+    =>
+    (modify ?prob
+        (is-crashing (get-answer "IS YOUR COMPUTER CRASHING?" (create$ yes no)))
+    )
+)
+
 
 (defrule QUESTIONS::wont-turn-on
     ?prob <- (problem
@@ -149,6 +165,49 @@
         else (modify ?prob (wont-turn-on yes))
     )
 )
+
+
+(defrule QUESTIONS::internet-working
+    ?prob <- (problem
+        (off-and-on-again yes)
+        (wont-turn-on no)
+        (screen-blank no)
+        (no-internet unknown)
+    )
+    =>
+    (if (eq (get-answer "IS YOUR INTERNET CONNECTION WORKING?" (create$ yes no)) yes)
+        then (modify ?prob (no-internet no))
+        else (modify ?prob (no-internet yes))
+    )
+)
+
+
+(defrule QUESTIONS::screen-blank
+    ?prob <- (problem
+        (off-and-on-again yes)
+        (wont-turn-on no)
+        (screen-blank unknown)
+    )
+    =>
+    (if (eq (get-answer "IS YOUR SCREEN WORKING?" (create$ yes no)) yes)
+        then (modify ?prob (screen-blank no))
+        else (modify ?prob (screen-blank yes))
+    )
+)
+
+(defrule QUESTIONS::error-message
+    ?prob <- (problem
+        (off-and-on-again yes)
+        (wont-turn-on no)
+        (screen-blank no)
+        (error-message unknown)
+    )
+    =>
+    (modify ?prob
+        (error-message (get-answer "ARE YOU SEEING AN ERROR MESSAGE?" (create$ yes no)))
+    )
+)
+
 
 (defrule QUESTIONS::plugged-in
     ?pc <- (computer
@@ -164,16 +223,6 @@
     )
 )
 
-
-; (defrule QUESTIONS::powered-on
-;     ?pc <- (computer
-;         (powered-on unknown)
-;     )
-;     =>
-;     (modify ?pc
-;         (powered-on (get-answer "IS YOUR COMPUTER POWERED ON?" (create$ yes no)))
-;     )
-; )
 
 (defrule QUESTIONS::is-laptop
     ?pc <- (computer
