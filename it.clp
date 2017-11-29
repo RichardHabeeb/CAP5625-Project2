@@ -134,7 +134,7 @@
 
 (defclass COMPUTERS::PROBLEM
     (is-a USER)
-    (slot off-and-on-again (type SYMBOL) (allowed-symbols yes no) (default no))
+    (slot off-and-on-again (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     ; (slot is-crashing (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     (slot wont-turn-on (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     (slot no-internet (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
@@ -225,10 +225,19 @@
 (defrule QUESTIONS::off-and-on-again
     ?comp <- (object (is-a COMPUTER))
     ?prob <- (object (is-a PROBLEM) 
-                (off-and-on-again no)
+                (off-and-on-again unknown)
              )
     =>
     (send ?prob put-off-and-on-again (get-answer "HAVE YOU TRIED TURNING IT OFF AND ON AGAIN?" (create$ yes no)))
+)
+
+(defrule QUESTIONS::off-and-on-again-1
+    ?comp <- (object (is-a COMPUTER))
+    ?prob <- (object (is-a PROBLEM) 
+                (off-and-on-again no)
+             )
+    =>
+    (final-answer "Please turn it off and on again.")
 )
 
 (defrule QUESTIONS::what-are-the-problems
@@ -293,14 +302,16 @@
                     (plugged-in unknown)
                 )
     =>
-    (bind ?charged (get-answer "Is your battery fully charged?" (create$ yes no unknown)))
+    ; (bind ?charged (get-answer "Is your battery fully charged?" (create$ yes no unknown)))
+    (bind ?charged (get-answer "Is your battery fully charged?" (create$ yes no)))
     (if (eq ?charged no)
      then 
         (send ?laptop put-plugged-in no)
-        (final-answer "Please plug-in the power-source to charge your battery.")
-     else (if (eq ?charged unknown)
-           then (send ?laptop put-plugged-in no)
-          )
+        (diag-step "Please plug-in the power-source to charge your battery.")
+     else (send ?laptop put-plugged-in no)
+     ; else (if (eq ?charged unknown)
+     ;       then (send ?laptop put-plugged-in no)
+     ;      )
      )
 )
 
@@ -318,7 +329,7 @@
     (if (eq (get-answer "Is the power-source plugged-in?" (create$ yes no)) no)
         then 
             (send ?laptop put-plugged-in no)
-            (final-answer "Please plug-in the power-source to charge your battery.")
+            (diag-step "Please plug-in the power-source.")
         else 
             (send ?laptop put-plugged-in yes)
             (final-answer "Please replace your battery.")
@@ -522,7 +533,7 @@
            )
      )
     =>
-    (send ?comp put-os (get-answer "What operating system are you using?" (create$ windows osx linux)))
+    (send ?comp put-os (get-answer "What operating system are you using?" (create$ windows osx)))
 )
 
 ; Windows internet issues.
