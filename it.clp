@@ -141,6 +141,7 @@
     (slot slow-internet (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     (slot screen-blank (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     (slot error-message (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
+    (slot is-resolved (type SYMBOL) (allowed-symbols yes no) (default no))
 )
 
 ;Create a blank computer for us to troubleshoot
@@ -501,6 +502,7 @@
     (if (eq (get-answer "Was the issue fixed after the restart?" (create$ yes no) ) yes)
      then 
         (send ?net put-router-has-internet yes)
+        (send ?prob put-no-internet no)
         (final-answer "Issue Resolved. Thank you for visiting.")
      else 
         (if (eq ?no-internet yes)
