@@ -503,6 +503,7 @@
      then 
         (send ?net put-router-has-internet yes)
         (send ?prob put-no-internet no)
+                (send ?prob put-slow-internet no)
         (final-answer "Issue Resolved. Thank you for visiting.")
      else 
         (if (eq ?no-internet yes)
