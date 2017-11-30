@@ -1,21 +1,30 @@
 ;/-------------------------------------------------------------------------------\
-; Expert System for IT Repair
+; MOSSBOT: Expert System for IT Repair
 ;
 ;       Course: CAP 5625 - Introduction to AI
 ;       Authors: Anwesh Tuladhar, Richard Habeeb
 ;
 ;       CLIPS Version 6.3
-;       To execute: (load it_cls.clp)
+;       To execute: (load it.clp)
 ;                   (reset)
 ;                   (run)
+;
+; MOSSBOT can help users diagnose problems related to:
+;   1. Computer not turning on.
+;   2. Computer with no internet access.
+;   3. Computer with slow internet access.
+;
+; MOSSBOT has expertise related:
+;   - laptops, desktops, basic networking
+;   - Windows and OSX operating systems
+;   - Chrome and Firefox browsers.
 ;\-------------------------------------------------------------------------------/
 
 (defmodule MAIN (export ?ALL))
 
 ;#################################################################################
-; FUNCTION DEFS
+; ASCII ART
 ;#################################################################################
-
 
 (deffunction print-moss ()
     (printout t "
@@ -47,6 +56,9 @@
       " crlf)
 )
 
+; -------------------------------------------------------------------------------
+; The first rule that is executed without any antecedent, loads the MOSSBOT.
+; -------------------------------------------------------------------------------
 (defrule MAIN::start
     =>
     (printout t "=============================================================" crlf)
@@ -60,6 +72,8 @@
 
 ;#################################################################################
 ; COMPUTERS
+; This module defines all the classes, templates, functions and message-handlers 
+; used in the program.
 ;#################################################################################
 (defmodule COMPUTERS (import MAIN ?ALL) (export ?ALL))
 
@@ -69,42 +83,23 @@
 (defmessage-handler USER init after ()
 (printout t "*** Done creating an instance ***" crlf))
 
+; -------------------------------------------------------------------------------
+; A template representing the operating systems installed in a computer
+; -------------------------------------------------------------------------------
 (deftemplate COMPUTERS::OS
     (slot kind (allowed-values windows osx linux other) (default ?NONE))
     (slot has-run-troubleshooter (allowed-values yes no) (default no))
 )
 
-; (defclass COMPUTERS::OS
-;     (is-a USER)
-;     (role abstract)
-;     (slot kind (allowed-values windows osx linux other) (default ?NONE))
-; )
-
-; (defclass COMPUTERS::WINDOWS
-;     (is-a OS)
-;     (role concrete)
-;     (slot has-run-troubleshooter (allowed-values yes no) (default no))
-; )
-
-; (defclass COMPUTERS::OSX
-;     (is-a OS)
-;     (role concrete)
-;     (slot has-run-network-diagnostics (allowed-values yes no) (default no))
-; )
-
-; (defclass COMPUTERS::LINUX
-;     (is-a OS)
-;     (role concrete)
-;     (slot has-run-troubleshooter (allowed-values yes no) (default no))
-; )
-
+; -------------------------------------------------------------------------------
+; A class representing a computer
+; The slots track the current state of the computer.
+; -------------------------------------------------------------------------------
 (defclass COMPUTERS::COMPUTER
     (is-a USER)
     (slot brand (default ?DERIVE))
     (slot form-factor (allowed-values laptop desktop unknown) (default unknown))
-    ; (multislot os (default nil))
-    ; (slot os (allowed-values windows osx other unknown) (default unknown))
-    (slot os )
+    (slot os)
     (slot has-run-troubleshooter (allowed-values yes no) (default no))
     (slot power-source (allowed-values battery outlet unknown) (default unknown))
     (slot plugged-in (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
@@ -118,10 +113,12 @@
 
     (slot has-cleared-history (allowed-values yes no unknown) (default unknown))
     (slot browser (allowed-values firefox chrome other unknown) (default unknown))
-
-    ; (multislot network-source (allowed-values wifi ethernet unknown) (default unknown))
 )
 
+; -------------------------------------------------------------------------------
+; A class representing a network
+; The slots track the current state of the network.
+; -------------------------------------------------------------------------------
 (defclass COMPUTERS::NETWORK
     (is-a USER)
     (slot router-has-internet (allowed-values yes no unknown) (default unknown))
@@ -131,35 +128,32 @@
     (slot no-network-issue (allowed-values true false) (default false))
 )
 
-
+; -------------------------------------------------------------------------------
+; A class representing a problem
+; The slots track the problems that the current user is facing.
+; -------------------------------------------------------------------------------
 (defclass COMPUTERS::PROBLEM
     (is-a USER)
     (slot off-and-on-again (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
-    ; (slot is-crashing (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     (slot wont-turn-on (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     (slot no-internet (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     (slot slow-internet (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     (slot screen-blank (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
     (slot error-message (type SYMBOL) (allowed-symbols yes no unknown) (default unknown))
-    (slot is-resolved (type SYMBOL) (allowed-symbols yes no) (default no))
 )
-
-;Create a blank computer for us to troubleshoot
-; (deffacts COMPUTERS::the-computer
-;     (computer)
-;     (problem)
-; )
-; (definstance COMPUTERS::the-computer
-;     ()
-; )
 
 ;#################################################################################
 ; QUESTIONS
+; This module is the main knowledge base for the expert system.
+; It imports the COMPUTERS module, which provides the basis for 
+; asking questions.
 ;#################################################################################
 (defmodule QUESTIONS (import COMPUTERS ?ALL))
 
+; -------------------------------------------------------------------------------
+; A function to prompt the user with questions.
+; -------------------------------------------------------------------------------
 (deffunction QUESTIONS::ask (?text ?allowed-answers)
-
     (printout t "=============================================================" crlf)
     (printout t "MOSSBOT: " ?text crlf ?allowed-answers "> ")
     (bind ?ans (read)) ; Read keyboard input
@@ -170,6 +164,10 @@
     ?ans
 )
 
+; -------------------------------------------------------------------------------
+; A function to ask questions to the user.
+; Also validates users answers against allowed answers.
+; -------------------------------------------------------------------------------
 (deffunction QUESTIONS::get-answer (?text ?allowed-answers)
     (bind ?ans (ask ?text ?allowed-answers))
 
@@ -180,12 +178,18 @@
     ?ans
 )
 
+; -------------------------------------------------------------------------------
+; A function that prompts the user with diagnostic steps.
+; -------------------------------------------------------------------------------
 (deffunction QUESTIONS::diag-step (?step)
     (printout t "-------------------------------------------------------------" crlf)
     (printout t "MOSSBOT INSTRUCTION: " ?step crlf)
     (printout t "-------------------------------------------------------------" crlf)
 )
 
+; -------------------------------------------------------------------------------
+; A function that provides the user with final solutions.
+; -------------------------------------------------------------------------------
 (deffunction QUESTIONS::final-answer (?answer)
     (printout t "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" crlf)
     (printout t "MOSSBOT SOLUTION: " ?answer crlf)
@@ -197,7 +201,11 @@
 ; RULES
 ;#################################################################################
 
-; 1. Figure out what type of computer first.
+; -------------------------------------------------------------------------------
+; Figure out what type of computer the user has.
+; Creates an instance of the corresponding computer and 
+; an instance of the problem.
+; -------------------------------------------------------------------------------
 (defrule QUESTIONS::form-factor
     (declare (salience 1000))
     =>
@@ -221,8 +229,10 @@
     (make-instance [problem] of PROBLEM)
 )
 
-;this is a really simple way that doesn't require parsing question objects -> use pattern matching
-;this is also a reference to IT crowd:
+; -------------------------------------------------------------------------------
+; this is a reference to IT crowd.
+; The first question to be asked even before knowing what the problem is.
+; -------------------------------------------------------------------------------
 (defrule QUESTIONS::off-and-on-again
     ?comp <- (object (is-a COMPUTER))
     ?prob <- (object (is-a PROBLEM) 
@@ -232,6 +242,9 @@
     (send ?prob put-off-and-on-again (get-answer "HAVE YOU TRIED TURNING IT OFF AND ON AGAIN?" (create$ yes no)))
 )
 
+; -------------------------------------------------------------------------------
+; Verify if off and on
+; -------------------------------------------------------------------------------
 (defrule QUESTIONS::off-and-on-again-1
     ?comp <- (object (is-a COMPUTER))
     ?prob <- (object (is-a PROBLEM) 
@@ -241,10 +254,16 @@
     (final-answer "Please turn it off and on again.")
 )
 
+; -------------------------------------------------------------------------------
+; Question to figure out the problem.
+; Possible problems are:
+; 1. Computer does not turn on.
+; 2. Computer has no internet access.
+; 3. Computer has slow internet access.
+; -------------------------------------------------------------------------------
 (defrule QUESTIONS::what-are-the-problems
     ?prob <- (object (is-a PROBLEM)
                 (off-and-on-again yes)
-                ; (is-crashing unknown)
                 (wont-turn-on unknown)
                 (no-internet unknown)
                 (slow-internet unknown)
@@ -340,29 +359,6 @@
 ;#################################################################################
 ; RULES FOR NO INTERNET
 ;#################################################################################
-; (defrule QUESTIONS::no-internet-1
-;     (declare (salience 400))
-;     ?prob <- (object (is-a PROBLEM)
-;                 (off-and-on-again yes)
-;                 (no-internet yes)
-;              )
-;     ?comp <- (object (is-a COMPUTER)
-;                     (network-source unknown)
-;                )
-;     =>
-;     (bind ?nic (get-answer "Are you using wifi or ethernet?" (create$ wifi ethernet none)))
-;     (send ?comp put-network-source ?nic)
-;     (make-instance [network] of NETWORK)
-;     (if (eq  ?nic wifi)
-;         then 
-;             (send ?comp put-network-source wifi)
-;         else (if (eq ?nic ethernet) 
-;               then (send ?comp put-network-source ethernet)
-;               else (send ?comp put-network-source none)
-;              )
-;     )
-; )
-
 (defrule QUESTIONS::no-internet-1
     (declare (salience 400))
     ?prob <- (object (is-a PROBLEM)
@@ -375,8 +371,8 @@
           )
     )
     ?comp <- (object (is-a COMPUTER)
-                    (network-source unknown)
-               )
+                     (network-source unknown)
+             )
     =>
     (bind ?nic (get-answer "Are you using wifi or ethernet?" (create$ wifi ethernet none)))
     (send ?comp put-network-source ?nic)
@@ -391,6 +387,10 @@
     )
 )
 
+; -------------------------------------------------------------------------------
+; RULES RELATED TO THE NETWORK 
+; These rules can be invoked with both no internet and slow internet problems.
+; -------------------------------------------------------------------------------
 (defrule QUESTIONS::no-internet-network-1
     (declare (salience 300))
     ?net <- (object (is-a NETWORK)
@@ -401,9 +401,7 @@
             (send ?net put-router-has-internet yes)
         else 
             (send ?net put-router-has-internet no)
-            ; (final-answer "Please contact the internet service provider.")
     )
-    ; (assert ())
 )
 
 (defrule QUESTIONS::no-internet-network-2
@@ -493,8 +491,6 @@
                 (slow-internet ?slow-internet)
              )
     ?net <- (object (is-a NETWORK)
-                    ; (router-has-internet no)
-                    ; (has-been-restarted no)
             )
     =>
     (retract ?diag)
@@ -511,11 +507,6 @@
             (send ?net put-router-has-internet no)
             (final-answer "Please contact the internet service provider.")
         )
-        ; (if (eq ?slow-internet yes)
-        ;  then 
-        ;     (send ?comp put-router-has-internet yes)
-        ; )
-
     )
 )
 
@@ -539,7 +530,9 @@
     (send ?comp put-os (get-answer "What operating system are you using?" (create$ windows osx)))
 )
 
-; Windows internet issues.
+; -------------------------------------------------------------------------------
+; Rules for no internet with Windows operating system.
+; -------------------------------------------------------------------------------
 (defrule QUESTIONS::no-internet-windows-1
     (declare (salience 400))
     ?prob <- (object (is-a PROBLEM)
@@ -584,7 +577,9 @@
     (final-answer "2. Update/reinstall network driver.")
 )
 
-; OSX internet issues.
+; -------------------------------------------------------------------------------
+; Rules for no internet with OSX operating system.
+; -------------------------------------------------------------------------------
 (defrule QUESTIONS::no-internet-osx-1
     (declare (salience 400))
     ?prob <- (object (is-a PROBLEM)
@@ -632,7 +627,6 @@
 ; RULES FOR SLOW INTERNET
 ;#################################################################################
 (defrule QUESTIONS::slow-internet-0
-    ; (declare (salience 400))
     ?prob <- (object (is-a PROBLEM)
                 (off-and-on-again yes)
                 (slow-internet yes)
@@ -648,7 +642,6 @@
 )
 
 (defrule QUESTIONS::slow-internet-1
-    ; (declare (salience 400))
     ?prob <- (object (is-a PROBLEM)
                 (off-and-on-again yes)
                 (slow-internet yes)
@@ -664,7 +657,6 @@
 )
 
 (defrule QUESTIONS::slow-internet-2
-    ; (declare (salience 400))
     ?prob <- (object (is-a PROBLEM)
                 (off-and-on-again yes)
                 (slow-internet yes)
@@ -676,8 +668,10 @@
     (send ?comp put-browser (get-answer "Which browser are you using?" (create$ chrome firefox other)))
 )
 
+; -------------------------------------------------------------------------------
+; Rules related to the browser.
+; -------------------------------------------------------------------------------
 (defrule QUESTIONS::slow-internet-3
-    ; (declare (salience 400))
     ?prob <- (object (is-a PROBLEM)
                 (off-and-on-again yes)
                 (slow-internet yes)
@@ -704,7 +698,6 @@
 )
 
 (defrule QUESTIONS::slow-internet-5
-    ; (declare (salience 400))
     ?prob <- (object (is-a PROBLEM)
                 (off-and-on-again yes)
                 (slow-internet yes)
@@ -719,7 +712,6 @@
 )
 
 (defrule QUESTIONS::slow-internet-6
-    ; (declare (salience 400))
     ?diag <- (single-tab)
     ?comp <- (object (is-a COMPUTER)
                      (browser ?browser)
@@ -748,152 +740,3 @@
         (final-answer "2. Contact your ISP for better internet service.")    
     )
 )
-
-; (defrule QUESTIONS::slow-internet-6
-;     ; (declare (salience 400))
-;     ?diag <- (disabled-extension)
-;     =>
-;     (retract ?diag)
-;     (final-answer "Possible solutions are:")    
-;     (final-answer "1. Scan computer for adware/malware/virus using antivirus software.")
-;     (final-answer "2. Contact your ISP for better internet service.")    
-; )
-; (defrule QUESTIONS::is-crashing
-;     ?prob <- (problem
-;         (off-and-on-again yes)
-;         (wont-turn-on no)
-;         (screen-blank no)
-;         (is-crashing unknown)
-;     )
-;     =>
-;     (modify ?prob
-;         (is-crashing (get-answer "IS YOUR COMPUTER CRASHING?" (create$ yes no)))
-;     )
-; )
-
-
-; (defrule QUESTIONS::wont-turn-on
-;     ?prob <- (problem
-;         (off-and-on-again yes)
-;         (wont-turn-on unknown)
-;     )
-;     =>
-;     (if (eq (get-answer "IS YOUR COMPUTER ABLE TO TURN ON?" (create$ yes no)) yes)
-;         then (modify ?prob (wont-turn-on no))
-;         else (modify ?prob (wont-turn-on yes))
-;     )
-; )
-
-
-; (defrule QUESTIONS::internet-working
-;     ?prob <- (problem
-;         (off-and-on-again yes)
-;         (wont-turn-on no)
-;         (screen-blank no)
-;         (no-internet unknown)
-;     )
-;     =>
-;     (if (eq (get-answer "IS YOUR INTERNET CONNECTION WORKING?" (create$ yes no)) yes)
-;         then (modify ?prob (no-internet no))
-;         else (modify ?prob (no-internet yes))
-;     )
-; )
-
-
-; (defrule QUESTIONS::screen-blank
-;     ?prob <- (problem
-;         (off-and-on-again yes)
-;         (wont-turn-on no)
-;         (screen-blank unknown)
-;     )
-;     =>
-;     (if (eq (get-answer "IS YOUR SCREEN WORKING?" (create$ yes no)) yes)
-;         then (modify ?prob (screen-blank no))
-;         else (modify ?prob (screen-blank yes))
-;     )
-; )
-
-; (defrule QUESTIONS::error-message
-;     ?prob <- (problem
-;         (off-and-on-again yes)
-;         (wont-turn-on no)
-;         (screen-blank no)
-;         (error-message unknown)
-;     )
-;     =>
-;     (modify ?prob
-;         (error-message (get-answer "ARE YOU SEEING AN ERROR MESSAGE?" (create$ yes no)))
-;     )
-; )
-
-
-; (defrule QUESTIONS::plugged-in
-;     ?pc <- (computer
-;         (plugged-in unknown)
-;     )
-;     ?prob <- (problem
-;         (off-and-on-again yes)
-;         (wont-turn-on yes)
-;     )
-;     =>
-;     (modify ?pc
-;         (plugged-in (get-answer "IS YOUR COMPUTER PLUGGED IN?" (create$ yes no)))
-;     )
-; )
-
-
-; (defrule QUESTIONS::is-laptop
-;     ?pc <- (computer
-;         (form-factor unknown)
-;         (built-in-display ?display)
-;         (power-source ?power)
-;     )
-;     =>
-;     (if (eq (get-answer "IS YOUR COMPUTER A LAPTOP?" (create$ yes no)) yes)
-;         then (modify ?pc
-;             (form-factor laptop)
-;             (built-in-display yes)
-;             (power-source battery)
-;         )
-;         else (modify ?pc
-;             (form-factor desktop)
-;             (built-in-display no)
-;             (power-source outlet)
-;         )
-;     )
-; )
-
-
-; (deftemplate QUESTIONS::question
-;     (slot text (default ?NONE))
-;     (multislot allowed-answers (default ?NONE))
-;     (slot asked (type SYMBOL) (allowed-symbols yes no) (default no))
-;     ;(slot attribute (default ?NONE))
-;     (slot result (default ?DERIVE))
-; )
-
-; (defrule QUESTIONS::ask
-;     ?q <- (question
-;         (asked no)
-;         (text ?t)
-;         (allowed-answers $?valid)
-;     )
-;     ?pc <- (computer
-;     )
-;     =>
-;     (printout t ?t " ")
-;     (printout t ?valid crlf)
-;     ;(assert)
-;     (modify ?q (asked yes) (result (read)))
-; )
-;
-; (deffacts QUESTIONS::expert-questions
-;     (question
-;         (text "Is your computer a laptop?")
-;         (allowed-answers yes no)
-;     )
-;     (question
-;         (text "Have you tried turning it off and on again?")
-;         (allowed-answers yes no)
-;     )
-; )
